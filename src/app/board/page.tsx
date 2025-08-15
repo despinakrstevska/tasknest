@@ -11,15 +11,43 @@ export default function BoardPage() {
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<{ [columnId: string]: Task[] }>({
     todo: [
-      { id: 27504, title: "Design mockups", description: "" },
-      { id: 27505, title: "Write specs", description: "" },
+      {
+        id: 27504,
+        title: "Design mockups",
+        description: "",
+        tags: ["design"],
+        type: "Feature",
+      },
+      {
+        id: 27505,
+        title: "Write specs",
+        description: "",
+        tags: [],
+        type: "UserStory",
+      },
     ],
-    inProgress: [{ id: 27503, title: "Develop login page", description: "" }],
-    done: [{ id: 27502, title: "Develop dashboard page", description: "" }],
+    inProgress: [
+      {
+        id: 27503,
+        title: "Develop login page",
+        description: "",
+        tags: ["urgent"],
+        type: "Bug",
+      },
+    ],
+    done: [
+      {
+        id: 27502,
+        title: "Develop dashboard page",
+        description: "",
+        tags: [],
+        type: "Feature",
+      },
+    ],
   });
 
   const handleAddOrUpdateTask = (
-    task: { title: string; description: string },
+    task: { title: string; description: string; tags?: string[]; type: string },
     id?: number
   ) => {
     if (id) {
@@ -28,7 +56,15 @@ export default function BoardPage() {
         const updatedTasks: typeof prevTasks = {};
         for (const columnId in prevTasks) {
           updatedTasks[columnId] = prevTasks[columnId].map((t) =>
-            t.id === id ? { ...t, ...task } : t
+            t.id === id
+              ? {
+                  ...t,
+                  ...task,
+                  type: (["Feature", "Bug", "UserStory", ""].includes(task.type)
+                    ? task.type
+                    : t.type) as Task["type"], // fallback to old type if invalid
+                }
+              : t
           );
         }
         return updatedTasks;
@@ -39,6 +75,8 @@ export default function BoardPage() {
       const newTask: Task = {
         id: Date.now(),
         ...task,
+        tags: task.tags ?? [],
+        type: "UserStory",
       };
       setTasks((prev) => ({
         ...prev,
@@ -50,7 +88,7 @@ export default function BoardPage() {
     setTaskToEdit(null);
   };
 
-const handleTaskClick = (task: Task) => {
+  const handleTaskClick = (task: Task) => {
     setTaskToEdit(task);
     setBladeOpen(true);
   };
@@ -71,7 +109,11 @@ const handleTaskClick = (task: Task) => {
           </button>
         </div>
 
-        <Board tasks={tasks} setTasks={setTasks} onTaskClick={handleTaskClick} />
+        <Board
+          tasks={tasks}
+          setTasks={setTasks}
+          onTaskClick={handleTaskClick}
+        />
 
         <TaskBlade
           isOpen={bladeOpen}

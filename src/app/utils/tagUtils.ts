@@ -1,0 +1,22 @@
+export const tagColors: { [key: string]: string } = {
+  bug: "bg-red-100 text-red-700",
+  feature: "bg-green-100 text-green-700",
+  design: "bg-blue-100 text-blue-700",
+  urgent: "bg-yellow-100 text-yellow-800",
+  default: "bg-gray-200 text-gray-800",
+  blocked: "bg-red-200 text-red-800",
+  predecessor: "bg-purple-200 text-purple-800",
+  improvement: "bg-teal-200 text-teal-800",
+  task: "bg-indigo-200 text-indigo-800",
+  enhancement: "bg-pink-200 text-pink-800",
+  maintenance: "bg-gray-300 text-gray-800",
+  research: "bg-orange-200 text-orange-800",
+  testing: "bg-yellow-200 text-yellow-800",
+  documentation: "bg-blue-200 text-blue-800",
+  deployment: "bg-green-200 text-green-800",
+  support: "bg-purple-200 text-purple-800",
+  analysis: "bg-teal-200 text-teal-800",
+  refactoring: "bg-pink-200 text-pink-800", 
+  designReview: "bg-gray-300 text-gray-800",
+  codeReview: "bg-orange-200 text-orange-800"
+};
