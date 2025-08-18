@@ -32,7 +32,16 @@ const Board = ({ tasks, setTasks, onTaskClick  }: BoardProps) => {
     const sourceTasks = [...tasks[source.droppableId]];
     const [moved] = sourceTasks.splice(source.index, 1);
     const destTasks = [...tasks[destination.droppableId]];
-    destTasks.splice(destination.index, 0, moved);
+    const movedWithStatus = {
+      ...moved,
+      status:
+        destination.droppableId === "todo"
+          ? "Todo"
+          : destination.droppableId === "inProgress"
+          ? "InProgress"
+          : "Done",
+    } as Task;
+    destTasks.splice(destination.index, 0, movedWithStatus);
 
     setTasks((prev) => ({
       ...prev,

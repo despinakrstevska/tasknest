@@ -1,50 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Board from "../components/Board";
 import { Task } from "../types/shared";
 import { TaskBlade } from "../components/TaskBlade";
 import { toast } from "react-toastify";
+import { fetchBoardTasks } from "../services/tasks";
 
 export default function BoardPage() {
   const [bladeOpen, setBladeOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<{ [columnId: string]: Task[] }>({
-    todo: [
-      {
-        id: 27504,
-        title: "Design mockups",
-        description: "",
-        tags: ["design"],
-        type: "Feature",
-      },
-      {
-        id: 27505,
-        title: "Write specs",
-        description: "",
-        tags: [],
-        type: "UserStory",
-      },
-    ],
-    inProgress: [
-      {
-        id: 27503,
-        title: "Develop login page",
-        description: "",
-        tags: ["urgent"],
-        type: "Bug",
-      },
-    ],
-    done: [
-      {
-        id: 27502,
-        title: "Develop dashboard page",
-        description: "",
-        tags: [],
-        type: "Feature",
-      },
-    ],
+    todo: [],
+    inProgress: [],
+    done: [],
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchBoardTasks();
+        setTasks(data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load tasks");
+        toast.error("Failed to load tasks");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const handleAddOrUpdateTask = (
     task: { title: string; description: string; tags?: string[]; type: string },
@@ -77,6 +67,7 @@ export default function BoardPage() {
         ...task,
         tags: task.tags ?? [],
         type: "UserStory",
+        status: "Todo",
       };
       setTasks((prev) => ({
         ...prev,
@@ -109,11 +100,17 @@ export default function BoardPage() {
           </button>
         </div>
 
-        <Board
-          tasks={tasks}
-          setTasks={setTasks}
-          onTaskClick={handleTaskClick}
-        />
+        {isLoading ? (
+          <div className="text-gray-500">Loading tasks…</div>
+        ) : error ? (
+          <div className="text-red-600">{error}</div>
+        ) : (
+          <Board
+            tasks={tasks}
+            setTasks={setTasks}
+            onTaskClick={handleTaskClick}
+          />
+        )}
 
         <TaskBlade
           isOpen={bladeOpen}

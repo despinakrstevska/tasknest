@@ -1,77 +1,74 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Task, User } from "../types/shared";
+import { fetchBoardTasks } from "../services/tasks";
+import { TaskBlade } from "../components/TaskBlade";
+import { toast } from "react-toastify";
 
 export default function DashboardPage() {
   // Current user (in a real app, this would come from authentication)
   const currentUser: User = { id: 1, name: "Despina Krstevska" };
 
+  const [todo, setTodo] = useState<Task[]>([]);
+  const [inProgress, setInProgress] = useState<Task[]>([]);
+  const [done, setDone] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [bladeOpen, setBladeOpen] = useState<boolean>(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchBoardTasks();
+        setTodo(data.todo ?? []);
+        setInProgress(data.inProgress ?? []);
+        setDone(data.done ?? []);
+      } catch (e) {
+        setError("Failed to load dashboard data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const allTasks: Task[] = [...todo, ...inProgress, ...done];
+
   const stats = {
-    total: 42,
-    completed: 18,
-    inProgress: 10,
-    todo: 14,
+    total: allTasks.length,
+    completed: done.length,
+    inProgress: inProgress.length,
+    todo: todo.length,
   };
 
-  // Sample tasks with assignees
-  const allTasks: Task[] = [
-    {
-      id: 1,
-      title: "Design mockups",
-      description: "Create wireframes for the new dashboard",
-      tags: ["design"],
-      type: "Feature",
-      assignee: { id: 1, name: "Despina Krstevska" },
-    },
-    {
-      id: 2,
-      title: "Write specs",
-      description: "Document API specifications",
-      tags: ["documentation"],
-      type: "UserStory",
-      assignee: { id: 2, name: "Bob Smith" },
-    },
-    {
-      id: 3,
-      title: "Develop login page",
-      description: "Implement user authentication",
-      tags: ["urgent"],
-      type: "Bug",
-      assignee: { id: 1, name: "Despina Krstevska" },
-    },
-    {
-      id: 4,
-      title: "Develop dashboard page",
-      description: "Create the main dashboard interface",
-      tags: ["frontend"],
-      type: "Feature",
-      assignee: { id: 1, name: "Despina Krstevska" },
-    },
-    {
-      id: 5,
-      title: "Fix navigation bug",
-      description: "Resolve issue with mobile navigation",
-      tags: ["bug", "mobile"],
-      type: "Bug",
-      assignee: { id: 3, name: "Charlie Lee" },
-    },
-  ];
-
-  // Filter tasks assigned to current user
-  const myTasks = allTasks.filter(task => task.assignee?.id === currentUser.id);
-
   const getStatusColor = (task: Task) => {
-    // This is a simplified logic - in a real app, you'd have a status field
-    if (task.id <= 2) return "bg-yellow-100 text-yellow-800";
-    if (task.id === 3) return "bg-blue-100 text-blue-800";
-    return "bg-green-100 text-green-800";
+    switch (task.status) {
+      case "Todo":
+        return "bg-gray-100 text-gray-800";
+      case "InProgress":
+        return "bg-yellow-100 text-yellow-800";
+      case "Done":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   };
 
   const getStatusText = (task: Task) => {
-    if (task.id <= 2) return "In Progress";
-    if (task.id === 3) return "Review";
-    return "Completed";
+    switch (task.status) {
+      case "Todo":
+        return "To Do";
+      case "InProgress":
+        return "In Progress";
+      case "Done":
+        return "Completed";
+      default:
+        return "Unknown";
+    }
   };
 
   const getTypeColor = (type: Task["type"]) => {
@@ -81,6 +78,55 @@ export default function DashboardPage() {
       case "UserStory": return "bg-blue-100 text-blue-800";
       default: return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const handleAddOrUpdateTask = (
+    task: { title: string; description: string; tags?: string[]; type: string; assignee?: User },
+    id?: number
+  ) => {
+    if (id) {
+      // Update existing task across columns
+      const updateTaskInList = (list: Task[]) =>
+        list.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                ...task,
+                tags: task.tags ?? [],
+                type: (["Feature", "Bug", "UserStory", ""].includes(task.type)
+                  ? task.type
+                  : t.type) as Task["type"],
+              }
+            : t
+        );
+
+      setTodo((prev) => updateTaskInList(prev));
+      setInProgress((prev) => updateTaskInList(prev));
+      setDone((prev) => updateTaskInList(prev));
+      toast.success("Task updated!");
+    } else {
+      // Create new task defaults to Todo
+      const newTask: Task = {
+        id: Date.now(),
+        title: task.title,
+        description: task.description,
+        tags: task.tags ?? [],
+        type: (["Feature", "Bug", "UserStory", ""].includes(task.type)
+          ? task.type
+          : "UserStory") as Task["type"],
+        status: "Todo",
+        assignee: task.assignee,
+      };
+      setTodo((prev) => [...prev, newTask]);
+      toast.success("Task added!");
+    }
+
+    setTaskToEdit(null);
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setTaskToEdit(task);
+    setBladeOpen(true);
   };
 
   return (
@@ -112,7 +158,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h2 className="text-sm text-gray-500">My Tasks</h2>
             <p className="text-2xl font-bold text-indigo-600">
-              {myTasks.length}
+              {allTasks.filter(t => t.assignee?.id === currentUser.id).length}
             </p>
           </div>
         </div>
@@ -125,15 +171,19 @@ export default function DashboardPage() {
           </div>
           
           <div className="p-6">
-            {myTasks.length === 0 ? (
+            {allTasks.filter(t => t.assignee?.id === currentUser.id).length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-gray-400 text-6xl mb-4">📋</div>
                 <p className="text-gray-500">No tasks assigned to you yet</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {myTasks.map((task) => (
-                  <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                {allTasks.filter(t => t.assignee?.id === currentUser.id).map((task) => (
+                  <div
+                    key={task.id}
+                    onClick={() => handleTaskClick(task)}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
@@ -168,6 +218,12 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+        <TaskBlade
+          isOpen={bladeOpen}
+          onClose={() => setBladeOpen(false)}
+          onSave={handleAddOrUpdateTask}
+          taskToEdit={taskToEdit}
+        />
       </div>
     </main>
   );

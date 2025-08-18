@@ -4,6 +4,7 @@ export type Task = {
   description: string;
   tags?: string[];
   type: "Feature" | "Bug" | "UserStory" | "";
+  status: "Todo" | "InProgress" | "Done";
   assignee?: User;
 };
 
