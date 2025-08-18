@@ -5,7 +5,7 @@ import { Task, User } from "../types/shared";
 
 export default function DashboardPage() {
   // Current user (in a real app, this would come from authentication)
-  const currentUser: User = { id: 1, name: "Alice Johnson" };
+  const currentUser: User = { id: 1, name: "Despina Krstevska" };
 
   const stats = {
     total: 42,
@@ -22,7 +22,7 @@ export default function DashboardPage() {
       description: "Create wireframes for the new dashboard",
       tags: ["design"],
       type: "Feature",
-      assignee: { id: 1, name: "Alice Johnson" },
+      assignee: { id: 1, name: "Despina Krstevska" },
     },
     {
       id: 2,
@@ -38,7 +38,7 @@ export default function DashboardPage() {
       description: "Implement user authentication",
       tags: ["urgent"],
       type: "Bug",
-      assignee: { id: 1, name: "Alice Johnson" },
+      assignee: { id: 1, name: "Despina Krstevska" },
     },
     {
       id: 4,
@@ -46,7 +46,7 @@ export default function DashboardPage() {
       description: "Create the main dashboard interface",
       tags: ["frontend"],
       type: "Feature",
-      assignee: { id: 1, name: "Alice Johnson" },
+      assignee: { id: 1, name: "Despina Krstevska" },
     },
     {
       id: 5,
@@ -89,12 +89,6 @@ export default function DashboardPage() {
         {/* Dashboard Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-indigo-700">Dashboard</h1>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-indigo-100 text-indigo-700 flex items-center justify-center rounded-full font-bold">
-              {currentUser.name.split(' ').map(n => n[0]).join('')}
-            </div>
-            <span className="text-sm text-gray-600">{currentUser.name}</span>
-          </div>
         </div>
 
         {/* Stats Overview Cards */}
